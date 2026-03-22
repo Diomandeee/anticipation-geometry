@@ -1,0 +1,15 @@
+{
+  "data": "real_conversations_40_densest",
+  "anticipatory_val_loss": 6.3602,
+  "baseline_val_loss": 6.3783,
+  "delta": 0.01810000000000045,
+  "anticipatory_wins": true,
+  "anticipatory_params": 4226366,
+  "baseline_params": 4153344,
+  "anticipatory_overfitting_gap": 0.09989999999999988,
+  "baseline_overfitting_gap": 0.25370000000000026,
+  "n_train": 2906,
+  "n_val": 323,
+  "epochs": 10,
+  "note": "Anticipatory wins AND overfits less (0.10 gap vs 0.26)"
+}

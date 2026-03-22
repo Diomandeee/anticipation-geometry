@@ -1,0 +1,39 @@
+/opt/conda/lib/python3.10/site-packages/transformers/tokenization_utils_base.py:1601: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be depracted in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+Loading model...
+Fetching latest conversations...
+20000 turns, 40 dense conversations
+Data: 2906 train, 323 val
+
+=== ANTICIPATORY ===
+Params: 4,226,366
+  Ep 1: train=7.5960 val=6.6208 best=6.6208
+  Ep 2: train=6.6072 val=6.4647 best=6.4647
+  Ep 3: train=6.5535 val=6.4384 best=6.4384
+  Ep 4: train=6.5071 val=6.4165 best=6.4165
+  Ep 5: train=6.4650 val=6.4005 best=6.4005
+  Ep 6: train=6.4255 val=6.3890 best=6.3890
+  Ep 7: train=6.3847 val=6.3757 best=6.3757
+  Ep 8: train=6.3430 val=6.3673 best=6.3673
+  Ep 9: train=6.3015 val=6.3631 best=6.3631
+  Ep 10: train=6.2603 val=6.3602 best=6.3602
+
+=== BASELINE ===
+Params: 4,153,344
+  Ep 1: train=7.0748 val=6.4693 best=6.4693
+  Ep 2: train=6.5594 val=6.4341 best=6.4341
+  Ep 3: train=6.4873 val=6.4171 best=6.4171
+  Ep 4: train=6.4246 val=6.4049 best=6.4049
+  Ep 5: train=6.3648 val=6.3926 best=6.3926
+  Ep 6: train=6.3073 val=6.3790 best=6.3790
+  Ep 7: train=6.2520 val=6.3783 best=6.3783
+  Ep 8: train=6.2044 val=6.3875 best=6.3783
+  Ep 9: train=6.1622 val=6.3940 best=6.3783
+  Ep 10: train=6.1246 val=6.3993 best=6.3783
+==================================================
+REAL CONVERSATION DATA RESULTS
+==================================================
+Traceback (most recent call last):
+  File "/workspace/train_fixed.py", line 134, in <module>
+    print(f"Anticipatory: {results[chr(39)+anticipatory+chr(39)]:.4f}" if False else f"Anticipatory: {results[anticipatory]:.4f}")
+NameError: name 'anticipatory' is not defined
