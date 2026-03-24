@@ -449,7 +449,10 @@ class EvaluationHarness:
             EvaluationResults with ranking accuracy and diagnostic scores.
         """
         start_time = time.time()
-        logger.info("Starting evaluation with %d paths, max %d hops", n_paths, max_hops)
+        import random
+        random.seed(42)
+        np.random.seed(42)
+        logger.info("Starting evaluation with %d paths, max %d hops (seed=42)", n_paths, max_hops)
 
         # Step 1: Generate paths
         gold_paths = self.generator.generate_gold_paths(

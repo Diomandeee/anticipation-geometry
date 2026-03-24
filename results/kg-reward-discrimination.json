@@ -1,0 +1,25 @@
+{
+  "kg_pairwise_accuracy": 1.0,
+  "anticipation_pairwise_accuracy": 0.3,
+  "combined_pairwise_accuracy": 1.0,
+  "kg_gold_silver_gap": 0.968421052631579,
+  "kg_gold_bronze_gap": 1.8877192982456141,
+  "anticipation_gold_silver_gap": -0.041186620245025896,
+  "anticipation_gold_bronze_gap": -0.02220626213386645,
+  "combined_gold_silver_gap": 0.5481033353829267,
+  "combined_gold_bronze_gap": 1.1148665692402753,
+  "n_gold": 15,
+  "n_silver": 15,
+  "n_bronze": 15,
+  "signal_discriminability": {
+    "kg_composite": 11.16961704032803,
+    "kg_axiomatic_validity": 7.765802747153207,
+    "kg_chain_continuity": 5.291502622129181,
+    "ant_commitment_mean": 1.58947620711577,
+    "ant_uncertainty_mean": 1.941234391767414,
+    "ant_recovery_margin_final": -0.4431839455785736,
+    "combined": 10.449540643304992
+  },
+  "seed": 42,
+  "reproducible": true
+}
