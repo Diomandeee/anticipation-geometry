@@ -29,3 +29,16 @@ env/
 training-data/
 training-data-curated/
 .claude/
+
+# Training artifacts
+vastai/data/
+training/data/
+runs/
+adapters/
+*.safetensors
+*.gguf
+*.bin
+
+# Large model caches
+models/
+.cache/
