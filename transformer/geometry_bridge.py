@@ -104,6 +104,65 @@ class GeometryBridge:
 
         return torch.tensor(all_scalars, device=embeddings.device)
 
+    # 10 inscription categories
+    INSCRIPTIONS = [
+        "stabilization", "transition", "oscillation", "correction", "exploration",
+        "convergence", "expansion", "regression", "stagnation", "completion",
+    ]
+
+    def scalars_to_inscriptions(self, scalars: torch.Tensor) -> torch.Tensor:
+        """Classify per-position scalars into inscription IDs [0-9].
+
+        Args:
+            scalars: (batch, seq, 7) anticipation scalars.
+
+        Returns:
+            inscription_ids: (batch, seq) long tensor of inscription IDs.
+        """
+        s = scalars.detach().cpu().numpy()
+        batch, seq, _ = s.shape
+        ids = np.zeros((batch, seq), dtype=np.int64)
+
+        for b in range(batch):
+            for t in range(seq):
+                commitment = s[b, t, 0]
+                uncertainty = s[b, t, 1]
+                transition_p = s[b, t, 2]  # normalized [0,1]
+                recovery = s[b, t, 3]
+                novelty = s[b, t, 5] if s.shape[2] > 5 else 0.5
+                stability = s[b, t, 6] if s.shape[2] > 6 else 0.5
+
+                if commitment > 0.8 and uncertainty < 0.3:
+                    ids[b, t] = 5 if transition_p < 0.55 else 9  # convergence / completion
+                elif uncertainty > 0.7:
+                    ids[b, t] = 2 if transition_p > 0.6 else 4  # oscillation / exploration
+                elif transition_p > 0.65:
+                    ids[b, t] = 1  # transition
+                elif recovery < 0.3:
+                    ids[b, t] = 7  # regression
+                elif commitment > 0.6 and uncertainty < 0.4:
+                    ids[b, t] = 0  # stabilization
+                elif transition_p < 0.4 and novelty < 0.3:
+                    ids[b, t] = 8  # stagnation
+                elif commitment < 0.3:
+                    ids[b, t] = 6 if novelty > 0.5 else 3  # expansion / correction
+                else:
+                    ids[b, t] = 0  # stabilization (default)
+
+        return torch.tensor(ids, device=scalars.device)
+
+    def embeddings_to_scalars_and_inscriptions(
+        self, embeddings: torch.Tensor, detach: bool = True
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Compute scalars and inscription IDs from embeddings.
+
+        Returns:
+            (scalars, inscription_ids): ((batch, seq, 7), (batch, seq))
+        """
+        scalars = self.embeddings_to_scalars(embeddings, detach=detach)
+        inscription_ids = self.scalars_to_inscriptions(scalars)
+        return scalars, inscription_ids
+
     def _compute_7_scalars(self, trajectory: list[np.ndarray]) -> np.ndarray:
         """Compute all 7 scalars for a single trajectory.
 

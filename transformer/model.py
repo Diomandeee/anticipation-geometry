@@ -72,11 +72,19 @@ class TrajectoryBiasNetwork(nn.Module):
     def __init__(self, config: AnticipatoryConfig):
         super().__init__()
         self.n_heads = config.n_heads
+        self.use_inscriptions = config.use_inscriptions
         hidden = config.trajectory_dims * 8  # 7 * 8 = 56
 
-        # Per-position scalar -> per-head bias
+        # Inscription embedding: 10 motifs -> hidden dim, fused with scalars
+        if self.use_inscriptions:
+            self.inscription_emb = nn.Embedding(config.n_inscriptions, hidden)
+            input_dim = config.trajectory_dims + hidden  # scalars + inscription embedding
+        else:
+            input_dim = config.trajectory_dims
+
+        # Per-position (scalar + inscription) -> per-head bias
         self.net = nn.Sequential(
-            nn.Linear(config.trajectory_dims, hidden),
+            nn.Linear(input_dim, hidden),
             nn.GELU(),
             nn.Linear(hidden, hidden),
             nn.GELU(),
@@ -101,21 +109,32 @@ class TrajectoryBiasNetwork(nn.Module):
         self,
         scalars: torch.Tensor,
         seq_len: int,
+        inscription_ids: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
-        """Compute per-head attention bias from anticipation scalars.
+        """Compute per-head attention bias from anticipation scalars + inscriptions.
 
         Args:
             scalars: (batch, seq, 7) anticipation scalars at each position.
             seq_len: Sequence length for the attention matrix.
+            inscription_ids: (batch, seq) inscription category IDs [0-9], optional.
 
         Returns:
             bias: (batch, n_heads, seq, seq) additive bias for attention logits.
         """
         batch = scalars.shape[0]
 
+        # Fuse scalars with inscription embeddings
+        if self.use_inscriptions:
+            if inscription_ids is None:
+                inscription_ids = torch.zeros(batch, scalars.shape[1], dtype=torch.long, device=scalars.device)
+            insc_emb = self.inscription_emb(inscription_ids)  # (batch, seq, hidden)
+            fused = torch.cat([scalars, insc_emb], dim=-1)  # (batch, seq, 7+hidden)
+        else:
+            fused = scalars
+
         # Compute per-position, per-head bias magnitude
         # (batch, seq, n_heads)
-        position_bias = self.net(scalars)
+        position_bias = self.net(fused)
 
         # Build the (seq, seq) bias: position i's bias affects how it
         # attends to all positions j. We use the difference in bias
@@ -169,6 +188,149 @@ class TrajectoryBiasNetwork(nn.Module):
         eye = torch.eye(self.n_heads, device=gram.device)
         penalty = ((gram - eye) ** 2).sum()
         return penalty
+
+
+class MoETrajectoryBias(nn.Module):
+    """Mixture of Experts trajectory bias: 10 specialist networks, one per inscription.
+
+    Each inscription category (stabilization, transition, oscillation, ...)
+    has its own bias network that learns category-specific attention patterns.
+    Routing is deterministic via inscription_id — no learned gating needed
+    since the classification already happened upstream.
+
+    This is a hard MoE in attention bias space:
+    - convergence expert learns narrow, focused attention
+    - exploration expert learns broad, dispersed attention
+    - oscillation expert learns alternating patterns
+    - etc.
+
+    Total params: 10 × ~4K = ~40K (negligible at any model scale).
+
+    Args:
+        config: AnticipatoryConfig with trajectory_dims, n_heads, n_inscriptions.
+    """
+
+    def __init__(self, config: AnticipatoryConfig):
+        super().__init__()
+        self.n_heads = config.n_heads
+        self.n_experts = config.n_inscriptions  # 10
+        hidden = config.trajectory_dims * 8  # 56
+
+        # 10 expert networks, each maps 7 scalars -> n_heads bias
+        self.experts = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(config.trajectory_dims, hidden),
+                nn.GELU(),
+                nn.Linear(hidden, hidden),
+                nn.GELU(),
+                nn.Linear(hidden, config.n_heads),
+            )
+            for _ in range(self.n_experts)
+        ])
+
+        # Per-expert distance kernels (each inscription type has its own
+        # notion of how attention decays with distance)
+        self.distance_scales = nn.Parameter(torch.ones(self.n_experts, config.n_heads))
+        self.distance_offsets = nn.Parameter(torch.zeros(self.n_experts, config.n_heads))
+
+        self._init_weights()
+
+    def _init_weights(self):
+        for expert in self.experts:
+            for module in expert:
+                if isinstance(module, nn.Linear):
+                    nn.init.xavier_uniform_(module.weight, gain=0.1)
+                    nn.init.zeros_(module.bias)
+
+    def forward(
+        self,
+        scalars: torch.Tensor,
+        seq_len: int,
+        inscription_ids: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """Route each position to its inscription-specific expert.
+
+        Args:
+            scalars: (batch, seq, 7) anticipation scalars.
+            seq_len: Sequence length.
+            inscription_ids: (batch, seq) inscription IDs [0-9]. Required.
+
+        Returns:
+            bias: (batch, n_heads, seq, seq) additive attention bias.
+        """
+        batch, seq, _ = scalars.shape
+        device = scalars.device
+
+        if inscription_ids is None:
+            inscription_ids = torch.zeros(batch, seq, dtype=torch.long, device=device)
+
+        # Compute bias per position, routing to the correct expert
+        # (batch, seq, n_heads)
+        position_bias = torch.zeros(batch, seq, self.n_heads, device=device)
+        # Per-position distance scale/offset
+        pos_dist_scale = torch.zeros(batch, seq, self.n_heads, device=device)
+        pos_dist_offset = torch.zeros(batch, seq, self.n_heads, device=device)
+
+        # Route each inscription to its expert
+        for expert_id in range(self.n_experts):
+            # Mask: which positions have this inscription
+            mask = (inscription_ids == expert_id)  # (batch, seq)
+            if not mask.any():
+                continue
+
+            # Get scalars for these positions
+            expert_scalars = scalars[mask]  # (n_active, 7)
+            expert_output = self.experts[expert_id](expert_scalars)  # (n_active, n_heads)
+
+            # Scatter back
+            position_bias[mask] = expert_output
+            pos_dist_scale[mask] = self.distance_scales[expert_id].unsqueeze(0).expand(mask.sum(), -1)
+            pos_dist_offset[mask] = self.distance_offsets[expert_id].unsqueeze(0).expand(mask.sum(), -1)
+
+        # Build (seq, seq) bias with per-position distance kernels
+        positions = torch.arange(seq, device=device, dtype=scalars.dtype)
+        rel_dist = (positions.unsqueeze(0) - positions.unsqueeze(1)).abs()  # (seq, seq)
+
+        # Per-position, per-head distance kernel
+        # pos_dist_scale: (batch, seq, n_heads) -> use mean across positions for the kernel
+        # For efficiency: use batch-averaged scale per head
+        avg_scale = pos_dist_scale.mean(dim=1)  # (batch, n_heads)
+        avg_offset = pos_dist_offset.mean(dim=1)  # (batch, n_heads)
+
+        dist_kernel = torch.exp(
+            -avg_scale.unsqueeze(-1).unsqueeze(-1) * rel_dist.unsqueeze(0).unsqueeze(0) * 0.01
+            + avg_offset.unsqueeze(-1).unsqueeze(-1)
+        )  # (batch, n_heads, seq, seq)
+
+        # Combine
+        pb = position_bias.permute(0, 2, 1).unsqueeze(-1)  # (batch, n_heads, seq, 1)
+        bias = pb * dist_kernel  # (batch, n_heads, seq, seq)
+
+        return bias
+
+    def orthogonality_penalty(self) -> torch.Tensor:
+        """Compute penalty encouraging different experts to produce different biases.
+
+        For MoE this measures inter-expert diversity rather than inter-head diversity.
+        """
+        # Collect the first layer weights from each expert
+        expert_vecs = []
+        for expert in self.experts:
+            W = expert[0].weight  # (hidden, trajectory_dims)
+            expert_vecs.append(W.mean(dim=0))  # (trajectory_dims,)
+
+        expert_vecs = torch.stack(expert_vecs)  # (n_experts, trajectory_dims)
+        expert_vecs = F.normalize(expert_vecs, dim=-1)
+        gram = expert_vecs @ expert_vecs.T
+        eye = torch.eye(self.n_experts, device=gram.device)
+        return ((gram - eye) ** 2).sum()
+
+    def expert_utilization(self, inscription_ids: torch.Tensor) -> dict[int, int]:
+        """Count how many positions each expert handles."""
+        counts = {}
+        for i in range(self.n_experts):
+            counts[i] = (inscription_ids == i).sum().item()
+        return counts
 
 
 # ---------------------------------------------------------------------------
@@ -638,7 +800,10 @@ class AnticipatoryTransformer(nn.Module):
         self.emb_dropout = nn.Dropout(config.dropout)
 
         # Trajectory bias network (shared across layers)
-        self.trajectory_bias_net = TrajectoryBiasNetwork(config)
+        if config.moe_bias:
+            self.trajectory_bias_net = MoETrajectoryBias(config)
+        else:
+            self.trajectory_bias_net = TrajectoryBiasNetwork(config)
 
         # Anticipation head - initial prediction from embeddings
         self.anticipation_head_initial = AnticipationHead(config)
@@ -690,6 +855,7 @@ class AnticipatoryTransformer(nn.Module):
         self,
         input_ids: torch.Tensor,
         external_scalars: Optional[torch.Tensor] = None,
+        inscription_ids: Optional[torch.Tensor] = None,
         targets: Optional[torch.Tensor] = None,
         use_commitment_gate: bool = True,
     ) -> dict[str, torch.Tensor]:
@@ -699,6 +865,8 @@ class AnticipatoryTransformer(nn.Module):
             input_ids: (batch, seq) token IDs.
             external_scalars: (batch, seq, 7) externally computed anticipation
                 scalars. If None, uses the model's own predicted scalars.
+            inscription_ids: (batch, seq) inscription category IDs [0-9].
+                If None, not used even if config.use_inscriptions is True.
             targets: (batch, seq) target token IDs for loss computation.
             use_commitment_gate: If True, apply commitment gating to output.
 
@@ -732,8 +900,8 @@ class AnticipatoryTransformer(nn.Module):
         else:
             active_scalars = initial_scalars
 
-        # 4. Compute trajectory bias
-        trajectory_bias = self.trajectory_bias_net(active_scalars, seq)
+        # 4. Compute trajectory bias (scalars + optional inscriptions)
+        trajectory_bias = self.trajectory_bias_net(active_scalars, seq, inscription_ids=inscription_ids)
 
         # 5. Causal mask
         causal_mask = self._make_causal_mask(seq, device)

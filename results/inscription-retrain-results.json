@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-24T00:11:48Z",
+  "timestamp": "2026-03-24T01:50:48Z",
   "baseline_39": {
     "accuracy": 0.717948717948718,
     "z": 2.7221786146864813,
@@ -115,189 +115,108 @@
     },
     "orig_4d_all": {
       "LogReg": {
-        "accuracy": 0.6821258593336859,
-        "std": 0.07382219955154168,
+        "accuracy": 0.65579058699101,
+        "std": 0.045269772624322496,
         "cv": "5-fold",
         "n_folds": 5
       },
       "GBM": {
-        "accuracy": 0.6496562665256478,
-        "std": 0.07821042270844622,
+        "accuracy": 0.6655737704918032,
+        "std": 0.0714102643027183,
         "cv": "5-fold",
         "n_folds": 5
       },
       "RF": {
-        "accuracy": 0.6722897937599155,
-        "std": 0.05328550502077373,
+        "accuracy": 0.7014806980433633,
+        "std": 0.04750859038909389,
         "cv": "5-fold",
         "n_folds": 5
       },
       "SVM": {
-        "accuracy": 0.6625594923320994,
-        "std": 0.06310282847407499,
+        "accuracy": 0.6559492332099418,
+        "std": 0.056530515526918075,
         "cv": "5-fold",
         "n_folds": 5
       }
     },
     "ext_5d_all": {
       "LogReg": {
-        "accuracy": 0.6754627181385511,
-        "std": 0.059787995552380194,
+        "accuracy": 0.672025383395029,
+        "std": 0.03173391469233082,
         "cv": "5-fold",
         "n_folds": 5
       },
       "GBM": {
-        "accuracy": 0.6464304600740349,
-        "std": 0.08253389007889035,
+        "accuracy": 0.6591750396615547,
+        "std": 0.06666288194410641,
         "cv": "5-fold",
         "n_folds": 5
       },
       "RF": {
-        "accuracy": 0.6527763088313062,
-        "std": 0.06074016578037231,
+        "accuracy": 0.7047065044949761,
+        "std": 0.046445816223252646,
         "cv": "5-fold",
         "n_folds": 5
       },
       "SVM": {
-        "accuracy": 0.6786885245901639,
-        "std": 0.06511099732366066,
+        "accuracy": 0.6691168693812798,
+        "std": 0.055866750351062235,
         "cv": "5-fold",
         "n_folds": 5
       }
     },
     "inscr_25d_all": {
       "LogReg": {
-        "accuracy": 0.6302485457429932,
-        "std": 0.07300821697987106,
+        "accuracy": 0.6461131676361713,
+        "std": 0.027507117445528705,
         "cv": "5-fold",
         "n_folds": 5
       },
       "GBM": {
-        "accuracy": 0.6300370174510841,
-        "std": 0.039984372825672826,
+        "accuracy": 0.6560021152829191,
+        "std": 0.02965076658181053,
         "cv": "5-fold",
         "n_folds": 5
       },
       "RF": {
-        "accuracy": 0.6885774722369117,
-        "std": 0.05586469798244003,
+        "accuracy": 0.6687466948704389,
+        "std": 0.039662048295888944,
         "cv": "5-fold",
         "n_folds": 5
       },
       "SVM": {
-        "accuracy": 0.6008461131676361,
-        "std": 0.07715467263266777,
+        "accuracy": 0.6267054468535167,
+        "std": 0.046359937238561875,
         "cv": "5-fold",
         "n_folds": 5
       }
     },
     "sigil_12d_all": {
       "LogReg": {
-        "accuracy": 0.500423056583818,
-        "std": 0.07891798538102701,
+        "accuracy": 0.525965097831835,
+        "std": 0.015732216735238565,
         "cv": "5-fold",
         "n_folds": 5
       },
       "GBM": {
-        "accuracy": 0.5324695928080381,
-        "std": 0.037421082658524035,
+        "accuracy": 0.5454785827604443,
+        "std": 0.044165871392145596,
         "cv": "5-fold",
         "n_folds": 5
       },
       "RF": {
-        "accuracy": 0.5194077207826546,
-        "std": 0.025544614055737654,
+        "accuracy": 0.5486515071390798,
+        "std": 0.05747286362992972,
         "cv": "5-fold",
         "n_folds": 5
       },
       "SVM": {
-        "accuracy": 0.5356953992596509,
-        "std": 0.043329751891086184,
+        "accuracy": 0.5487572712850344,
+        "std": 0.03374257515811293,
         "cv": "5-fold",
         "n_folds": 5
       }
     }
   },
-  "feature_importance": {},
-  "feature_importance_sigil_12d": {
-    "sigil_stabilization": 0.061411670911639765,
-    "sigil_dispersion": 0.1673748394545643,
-    "sigil_transition": 0.05368623057449977,
-    "sigil_return": 0.0375021282190932,
-    "sigil_dwell": 0.15885875700345842,
-    "sigil_oscillation": 0.30586817747729633,
-    "sigil_recovery": 0.0,
-    "sigil_novelty": 0.00824077057743679,
-    "sigil_place_shift": 0.01142710697491833,
-    "sigil_echo": 0.0018518482773111277,
-    "depth": 0.17344526425910217,
-    "confidence": 0.020333206270679752
-  },
-  "sigil_distribution_analysis": {
-    "stabilization": {
-      "converging": 0.25166287316824953,
-      "non_converging": 0.3716345805624464,
-      "delta": -0.11997170739419688
-    },
-    "dispersion": {
-      "converging": 0.08601265620082825,
-      "non_converging": 0.06481434821468184,
-      "delta": 0.021198307986146414
-    },
-    "transition": {
-      "converging": 0.1485525118052,
-      "non_converging": 0.16984654954332765,
-      "delta": -0.021294037738127658
-    },
-    "return": {
-      "converging": 0.011897327085499128,
-      "non_converging": 0.010972420419577831,
-      "delta": 0.0009249066659212969
-    },
-    "dwell": {
-      "converging": 0.4094793458234318,
-      "non_converging": 0.3171349600797159,
-      "delta": 0.0923443857437159
-    },
-    "oscillation": {
-      "converging": 0.0695582812249479,
-      "non_converging": 0.023895295009535994,
-      "delta": 0.0456629862154119
-    },
-    "recovery": {
-      "converging": 0.0,
-      "non_converging": 0.0,
-      "delta": 0.0
-    },
-    "novelty": {
-      "converging": 0.018244872411539076,
-      "non_converging": 0.02395721043888353,
-      "delta": -0.005712338027344454
-    },
-    "place_shift": {
-      "converging": 0.0015432098765432098,
-      "non_converging": 0.004976552780170351,
-      "delta": -0.003433342903627141
-    },
-    "echo": {
-      "converging": 0.0030489224037611134,
-      "non_converging": 0.012768082951660454,
-      "delta": -0.00971916054789934
-    }
-  },
-  "methodology": {
-    "inscription_encoder": "keyword-based NKo sigil classifier (10 types)",
-    "convergence_label": "commitment_second > commitment_first (second half commitment exceeds first half)",
-    "baseline": "sign(first_half_transition_pressure) predicts convergence",
-    "cv_39_sessions": "Leave-One-Out",
-    "cv_308_sessions": "Stratified 5-Fold",
-    "feature_sets": {
-      "orig_4d": "commitment_mean, uncertainty_mean, tp_mean, recovery_mean",
-      "ext_5d": "orig_4d + first_half_tp",
-      "sigil_12d": "10 sigil probabilities + depth + confidence",
-      "inscr_25d": "sigil_12d + orig_4d + 9 interaction terms"
-    },
-    "key_finding": "Sigil-only features (GBM) achieve 79.5% on 39 sessions, beating the 71.8% TP sign baseline by +7.7pp (z=3.68, p<0.001). Top features: oscillation (30.6%), depth (17.3%), dispersion (16.7%), dwell (15.9%). Stabilization is 12pp lower in converging sessions, dwell is 9.2pp higher.",
-    "caution": "Sigil-only features drop to chance (~50%) on expanded 308 sessions, suggesting keyword heuristics overfit to the benchmark conversation style. Combined inscription+scalar features (RF) reach 68.9% on 308 sessions."
-  }
+  "feature_importance": {}
 }

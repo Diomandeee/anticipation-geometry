@@ -252,17 +252,23 @@ class Trainer:
             input_ids = input_ids.to(self.device)
             targets = targets.to(self.device)
 
-            # Compute external scalars
+            # Compute external scalars + inscription IDs
             external_scalars = None
+            inscription_ids = None
             if self.use_external_scalars and self.bridge is not None:
                 external_scalars = self.bridge.batch_compute(
                     input_ids, self.model.tok_emb,
+                ).to(self.device)
+                # Derive inscription categories from scalars
+                inscription_ids = self.bridge.scalars_to_inscriptions(
+                    external_scalars
                 ).to(self.device)
 
             # Forward pass
             result = self.model(
                 input_ids,
                 external_scalars=external_scalars,
+                inscription_ids=inscription_ids,
                 targets=targets,
             )
 
@@ -466,6 +472,10 @@ def main():
     parser.add_argument("--device", type=str, default="cpu", help="Device (cpu/cuda/mps)")
     parser.add_argument("--no-external-scalars", action="store_true",
                         help="Disable external scalar supervision")
+    parser.add_argument("--no-inscriptions", action="store_true",
+                        help="Disable inscription embeddings in trajectory bias")
+    parser.add_argument("--moe-bias", action="store_true",
+                        help="Use MoE trajectory bias (10 expert networks, hard routing)")
     parser.add_argument("--save-dir", type=str, default=None,
                         help="Directory to save checkpoints")
     args = parser.parse_args()
@@ -484,6 +494,8 @@ def main():
         vocab_size=args.vocab_size,
         max_seq_len=args.seq_len * 4,
         dropout=0.1,
+        use_inscriptions=not args.no_inscriptions,
+        moe_bias=args.moe_bias,
     )
 
     # Load data

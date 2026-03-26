@@ -57,6 +57,11 @@ class AnticipatoryConfig:
     # Trajectory
     trajectory_dims: int = 7
 
+    # Inscription (10 behavioral motif categories)
+    n_inscriptions: int = 10
+    use_inscriptions: bool = True
+    moe_bias: bool = False  # If True, use MoE trajectory bias (hard routing per inscription)
+
     # Commitment gating
     commitment_threshold: float = 0.8
     max_buffer: int = 5
