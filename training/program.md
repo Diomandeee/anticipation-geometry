@@ -32,7 +32,7 @@ Things to try:
 
 ### Running
 ```bash
-# From Mac4:
+# From Compute machine:
 cd ~/projects/thunder-train
 python3 train_experiment.py
 ```
@@ -52,7 +52,7 @@ Each run does 100 training steps (~2 min) and reports val_loss. The baseline is:
 - `~/projects/atx-data/real_conv_eval.jsonl` — eval set (2,825 records, standard format)
 
 ### Constraints
-- **Time budget**: 100 steps max per experiment (~2 min on Mac4)
+- **Time budget**: 100 steps max per experiment (~2 min on the compute machine)
 - **Hardware**: Apple Silicon M4 16GB, MLX framework
 - **Model**: mlx-community/Qwen2.5-3B-Instruct-4bit (frozen, LoRA only)
 - **Do not modify** the eval data or the eval function

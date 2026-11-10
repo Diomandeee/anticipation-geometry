@@ -4,7 +4,7 @@
 
 ### Added
 - **Training pipeline**: QLoRA fine-tuning with anticipation conditioning (HuggingFace + MLX)
-- **Thunder-Train integration**: Distributed training across Mac4+Mac5 over Thunderbolt 5
+- **Thunder-Train integration**: Distributed training across two machines over Thunderbolt 5
 - **Inscription conditioner**: 10-category behavioral motif vocabulary for training data
 - **4 data formats**: ChatML messages, text, prompt/completion, annotated messages
 - **5-run experiment framework**: Control + treatment + 3 ablation conditions

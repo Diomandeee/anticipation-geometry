@@ -99,7 +99,7 @@ Three ways to train:
 ```bash
 cd training && bash thunder_5runs.sh
 ```
-Uses Thunderbolt 5 to pool Mac4+Mac5 into 32GB. Handles 3B-14B models.
+Uses Thunderbolt 5 to pool two machines into 32GB. Handles 3B-14B models.
 
 **2. Single Mac with MLX**
 ```bash

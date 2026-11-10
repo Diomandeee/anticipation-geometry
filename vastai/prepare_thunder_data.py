@@ -5,7 +5,7 @@ Creates ChatML JSONL files with/without inscription prefixes for
 controlled comparison. Each file has the same conversations but
 different conditioning formats.
 
-Output (on Mac5 at ~/projects/atx-data/):
+Output (on the trainer at ~/projects/atx-data/):
   sft_standard.jsonl          — control: plain ChatML, no inscription
   sft_inscription.jsonl       — treatment: inscription + scalars prepended
   sft_inscription_nogate.jsonl — ablation: inscription only, no gate metadata
@@ -116,7 +116,7 @@ def main():
         print(f"  real_conv_eval.jsonl: {len(eval_records)} records")
 
     print(f"\nAll data at {OUT_DIR}/")
-    print("Copy to Mac5: rsync -a /tmp/atx-thunder-data/ mac5:~/projects/atx-data/")
+    print("Copy to the trainer: rsync -a /tmp/atx-thunder-data/ trainer:~/projects/atx-data/")
 
 
 if __name__ == "__main__":

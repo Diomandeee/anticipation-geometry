@@ -32,15 +32,11 @@ INSCRIPTION_VOCAB = [
 
 
 def get_service_key():
-    """Get service role key from cloud-vm."""
-    import subprocess
-    result = subprocess.run(
-        ["ssh", "cloud-vm", "grep", "SUPABASE_SERVICE_KEY",
-         "/home/mohameddiomande/monitoring/.env"],
-        capture_output=True, text=True, timeout=10)
-    if result.returncode == 0:
-        return result.stdout.strip().split("=", 1)[1]
-    raise RuntimeError("Could not get service role key from cloud-vm")
+    """Get service role key from the environment."""
+    key = os.environ.get("SUPABASE_SERVICE_KEY")
+    if key:
+        return key
+    raise RuntimeError("Set SUPABASE_SERVICE_KEY")
 
 
 def fetch_turns(key: str, offset: int = 0, limit: int = 1000,
@@ -197,7 +193,7 @@ def main():
     parser.add_argument("--output", default="training/data/supabase_annotated.jsonl")
     args = parser.parse_args()
 
-    print("Getting Supabase service key from cloud-vm...")
+    print("Getting Supabase service key from the environment...")
     key = get_service_key()
     print(f"Key obtained ({len(key)} chars)")
 

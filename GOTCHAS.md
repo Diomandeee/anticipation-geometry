@@ -78,12 +78,12 @@ If you pinned torch 2.2.1, bitsandbytes 0.49 will error.
 ## MLX / Apple Silicon
 
 ### MLX 0.31+ required for `mlx.launch`
-Mac5 on Python 3.9 (Xcode bundled) caps at MLX 0.29. There are no MLX 0.31 wheels for Python 3.9.
+A machine on Python 3.9 (Xcode bundled) caps at MLX 0.29. There are no MLX 0.31 wheels for Python 3.9.
 
 **Fix:** Use `distributed_launch.sh` (SSH + env vars) instead of `python3 -m mlx.launch`.
 
 ### Thunder-Train: Python version mismatch across machines
-Mac4 may have Python 3.14, Mac5 may have Python 3.9. The launch script uses `/opt/homebrew/bin/python3` which resolves differently on each machine.
+One machine may have Python 3.14, the other may have Python 3.9. The launch script uses `/opt/homebrew/bin/python3` which resolves differently on each machine.
 
 **Fix:** The `distributed_launch.sh` script hardcodes `PYTHON="/opt/homebrew/bin/python3"`. If your machines differ, edit this per-host.
 
@@ -104,7 +104,7 @@ With 78-82 records, validation loss bottoms at iter 100-200 then rises. This is 
 
 ### Distributed training: both ranks must show identical loss
 If rank 0 and rank 1 show different losses at the same step, gradient averaging is broken. Check:
-1. TB5 link: `ping -c 1 10.0.5.2`
+1. TB5 link: `ping -c 1 <peer-tb5-address>`
 2. Ring backend env vars: `MLX_COMM_RING_ADDR`, `MLX_COMM_RING_PORT`, `MLX_COMM_NUM_RANKS`
 3. Both processes started simultaneously (within ~1s)
 

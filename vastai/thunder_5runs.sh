@@ -1,11 +1,11 @@
 #!/bin/bash
-# 5 Controlled Runs on Thunder-Train (Mac4+Mac5, TB5, Qwen2.5-3B)
+# 5 Controlled Runs on Thunder-Train (two machines, TB5, Qwen2.5-3B)
 # Replaces the Vast.ai A100 plan with local distributed training.
 #
-# Thunder-Train pools Mac4+Mac5 via TB5 ring backend.
+# Thunder-Train pools two machines via TB5 ring backend.
 # Data parallel: full model on each machine, gradients averaged → 2x throughput.
 #
-# Run from Mac4: bash thunder_5runs.sh
+# Run from the compute machine: bash thunder_5runs.sh
 
 set -e
 
@@ -24,7 +24,7 @@ SAVE_EVERY=500
 echo "========================================"
 echo "Anticipatory Transformer — 5 Thunder-Train Runs"
 echo "Model: $MODEL (3B, 4-bit)"
-echo "Cluster: Mac4 (10.0.5.1) + Mac5 (10.0.5.2)"
+echo "Cluster: two machines over TB5"
 echo "Strategy: data parallel (2x throughput)"
 echo "Iters: $ITERS per run"
 echo "========================================"
@@ -62,7 +62,7 @@ run_thunder() {
 
     # Wait for both ranks to finish (check rank 0 log for completion)
     echo "  Waiting for training to complete..."
-    while ssh mac4 "ps aux | grep thunder_train | grep -v grep | wc -l" 2>/dev/null | grep -q '[1-9]'; do
+    while ssh compute "ps aux | grep thunder_train | grep -v grep | wc -l" 2>/dev/null | grep -q '[1-9]'; do
         sleep 30
     done
 
@@ -72,7 +72,7 @@ run_thunder() {
     echo ""
 
     # Capture final val loss from rank 0 log
-    ssh mac4 "grep 'val_loss\|Final' ~/projects/karl/thunder-rank0.log | tail -3" 2>/dev/null
+    ssh compute "grep 'val_loss\|Final' ~/projects/karl/thunder-rank0.log | tail -3" 2>/dev/null
     echo ""
 }
 
@@ -99,5 +99,5 @@ echo "========================================"
 echo ""
 echo "Run summary:"
 for RUN in control treatment no-gate no-inscription no-lse; do
-    echo "  $RUN: $(ssh mac4 "grep 'Final validation' ~/projects/karl/thunder-rank0.log 2>/dev/null | tail -1" 2>/dev/null)"
+    echo "  $RUN: $(ssh compute "grep 'Final validation' ~/projects/karl/thunder-rank0.log 2>/dev/null | tail -1" 2>/dev/null)"
 done
